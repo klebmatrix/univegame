@@ -6,12 +6,12 @@
     <style>
         body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: sans-serif; }
         
-        /* BOTÃO REFORÇADO */
+        /* BOTÃO PURO HTML - NÃO TRAVA O JOGO */
         #home-link {
             position: fixed; 
-            top: 80px; 
+            top: 60px; 
             left: 20px; 
-            z-index: 999999;
+            z-index: 1000;
             background: #ff4757; 
             color: #fff !important; 
             padding: 15px 25px; 
@@ -20,13 +20,12 @@
             font-weight: bold;
             border-radius: 10px;
             border: 2px solid #fff;
-            display: inline-block;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            -webkit-tap-highlight-color: transparent;
+            display: block;
+            text-align: center;
         }
 
         #score {
-            position: absolute; top: 180px; width: 100%; text-align: center;
+            position: absolute; top: 140px; width: 100%; text-align: center;
             font-size: 80px; color: #ffd700; font-weight: bold; pointer-events: none;
         }
         canvas { display: block; background: #000; }
@@ -34,7 +33,7 @@
 </head>
 <body>
 
-    <a href="https://cromosvirtual.com/" id="home-link" target="_top" rel="opener">Home</a>
+    <a href="https://cromosvirtual.com/" id="home-link" target="_top">VOLTAR PARA HOME</a>
     
     <div id="score">0</div>
     <canvas id="gameCanvas"></canvas>
@@ -43,15 +42,6 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
-
-        // Força o clique a tentar todas as formas de sair do Streamlit
-        document.getElementById('home-link').onclick = function(e) {
-            // Se o link normal falhar, o JS tenta forçar a janela de cima
-            window.top.location.href = "https://cromosvirtual.com/";
-            if (window.parent) {
-                window.parent.location.href = "https://cromosvirtual.com/";
-            }
-        };
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -72,6 +62,7 @@
         }
 
         window.addEventListener('touchmove', (e) => { 
+            // Se o toque for no link, não bloqueia o evento padrão (deixa o link funcionar)
             if(e.target.id !== 'home-link') {
                 e.preventDefault(); 
                 move(e);
@@ -84,7 +75,7 @@
             dots.push({
                 x: Math.random() * (canvas.width - 50) + 25,
                 y: -50,
-                s: 5 + (score / 20)
+                s: 5
             });
         }
 
@@ -92,11 +83,13 @@
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Jogador
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.r, 0, Math.PI*2);
             ctx.fillStyle = "white";
             ctx.fill();
 
+            // Átomos
             for (let i = dots.length - 1; i >= 0; i--) {
                 let d = dots[i];
                 d.y += d.s;
