@@ -6,10 +6,10 @@
     <style>
         body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: sans-serif; }
         
-        /* BOTÃO LINK REAL - ABRE EM NOVA ABA */
+        /* BOTÃO REFORÇADO */
         #home-link {
             position: fixed; 
-            top: 80px; /* Bem longe da quina do celular */
+            top: 80px; 
             left: 20px; 
             z-index: 999999;
             background: #ff4757; 
@@ -22,6 +22,7 @@
             border: 2px solid #fff;
             display: inline-block;
             box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            -webkit-tap-highlight-color: transparent;
         }
 
         #score {
@@ -33,7 +34,7 @@
 </head>
 <body>
 
-    <a href="https://cromosvirtual.com/" id="home-link" target="_blank">Home</a>
+    <a href="https://cromosvirtual.com/" id="home-link" target="_top" rel="opener">Home</a>
     
     <div id="score">0</div>
     <canvas id="gameCanvas"></canvas>
@@ -42,6 +43,15 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
+
+        // Força o clique a tentar todas as formas de sair do Streamlit
+        document.getElementById('home-link').onclick = function(e) {
+            // Se o link normal falhar, o JS tenta forçar a janela de cima
+            window.top.location.href = "https://cromosvirtual.com/";
+            if (window.parent) {
+                window.parent.location.href = "https://cromosvirtual.com/";
+            }
+        };
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -62,7 +72,6 @@
         }
 
         window.addEventListener('touchmove', (e) => { 
-            // Só move se o toque não for no link
             if(e.target.id !== 'home-link') {
                 e.preventDefault(); 
                 move(e);
