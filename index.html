@@ -6,46 +6,44 @@
     <style>
         body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: sans-serif; }
         
-        /* BOTÃO COM MARGEM DE SEGURANÇA */
-        #home-link {
+        /* BOTÃO REFORÇADO E DESLOCADO */
+        #btn-home {
             position: fixed; 
-            top: 40px; /* Empurrei para baixo para fugir da câmera/barra */
-            left: 20px; /* Afastei da borda lateral */
-            z-index: 9999;
-            background: #ff4757; /* Vermelho mais visível */
+            top: 60px; /* Descido para não emperrar na barra do navegador */
+            left: 20px; 
+            z-index: 10000; /* Camada máxima */
+            background: #ff4757; 
             color: #fff; 
-            padding: 12px 20px; 
-            text-decoration: none; 
-            font-size: 14px; 
+            padding: 15px 25px; 
+            border: 2px solid #fff;
+            font-size: 16px; 
             font-weight: bold;
-            border-radius: 8px;
-            display: block;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255,0,0,0.4);
+            -webkit-appearance: none; /* Garante que apareça no iPhone */
         }
 
-        /* PLACAR AINDA MAIS BAIXO */
         #score {
-            position: absolute; 
-            top: 120px; /* Desci o placar para não bater no botão */
-            width: 100%; 
-            text-align: center;
-            font-size: 80px; 
-            color: #ffd700; 
-            font-weight: bold; 
-            pointer-events: none;
-            text-shadow: 2px 2px 10px #000;
+            position: absolute; top: 140px; width: 100%; text-align: center;
+            font-size: 80px; color: #ffd700; font-weight: bold; pointer-events: none;
         }
         canvas { display: block; background: #000; }
     </style>
 </head>
 <body>
 
-    <a href="https://cromosvirtual.com/" id="home-link" target="_top">← VOLTAR</a>
+    <button id="btn-home" onclick="sair()">← HOME</button>
+    
     <div id="score">0</div>
-
     <canvas id="gameCanvas"></canvas>
 
     <script>
+        // Função que força a saída do Streamlit para o seu site
+        function sair() {
+            window.top.location.href = "https://cromosvirtual.com/";
+        }
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
@@ -53,11 +51,11 @@
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            player.y = canvas.height * 0.65; // Ajuste fino da bola
+            player.y = canvas.height * 0.7; 
         }
 
         let score = 0;
-        let player = { x: window.innerWidth/2, y: window.innerHeight * 0.65, r: 30 };
+        let player = { x: window.innerWidth/2, y: window.innerHeight * 0.7, r: 35 };
         let dots = [];
 
         window.addEventListener('resize', resize);
@@ -68,13 +66,19 @@
             player.x = x;
         }
         window.addEventListener('mousemove', move);
-        window.addEventListener('touchmove', (e) => { e.preventDefault(); move(e); }, {passive: false});
+        window.addEventListener('touchmove', (e) => { 
+            // Só move se o toque não for em cima do botão
+            if(e.target.id !== 'btn-home') {
+                e.preventDefault(); 
+                move(e);
+            }
+        }, {passive: false});
 
         function spawn() {
             dots.push({
                 x: Math.random() * (canvas.width - 40) + 20,
                 y: -20,
-                s: 5 + (score / 20)
+                s: 5 + (score / 15)
             });
         }
 
@@ -82,7 +86,6 @@
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Jogador (Bola Branca)
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.r, 0, Math.PI*2);
             ctx.fillStyle = "white";
@@ -91,20 +94,16 @@
             for (let i = dots.length - 1; i >= 0; i--) {
                 let d = dots[i];
                 d.y += d.s;
-
                 ctx.beginPath();
-                ctx.arc(d.x, d.y, 15, 0, Math.PI*2);
+                ctx.arc(d.x, d.y, 18, 0, Math.PI*2);
                 ctx.fillStyle = "#ffd700";
                 ctx.fill();
 
-                let dist = Math.hypot(player.x - d.x, player.y - d.y);
-                if (dist < player.r + 15) {
+                if (Math.hypot(player.x - d.x, player.y - d.y) < player.r + 18) {
                     score++;
                     scoreEl.innerText = score;
                     dots.splice(i, 1);
-                } else if (d.y > canvas.height) {
-                    dots.splice(i, 1);
-                }
+                } else if (d.y > canvas.height) dots.splice(i, 1);
             }
             requestAnimationFrame(loop);
         }
