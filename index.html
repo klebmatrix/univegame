@@ -4,77 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; background: #000; overflow: hidden; touch-action: none; }
-        canvas { display: block; }
-        #info-overlay {
+        /* Fundo garantido como preto */
+        body, html { margin: 0; padding: 0; background: #000; overflow: hidden; height: 100%; width: 100%; }
+        
+        /* Placar gigante e fixo */
+        #score-container {
+            position: absolute; top: 10%; width: 100%; text-align: center;
+            color: #ffd700; font-family: sans-serif; pointer-events: none; z-index: 100;
+        }
+        #score-val { font-size: 80px; font-weight: bold; display: block; }
+        .label { font-size: 14px; color: #fff; text-transform: uppercase; }
+
+        canvas { display: block; position: absolute; top: 0; left: 0; }
+        
+        #overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); display: none; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center; color: white; z-index: 10;
+            justify-content: center; align-items: center; color: white; z-index: 200; text-align: center;
         }
     </style>
 </head>
 <body>
-    <div id="info-overlay">
-        <div style="border: 2px solid #00d4ff; padding: 20px; border-radius: 10px; max-width: 80%;">
-            <h2 id="info-title"></h2>
-            <p id="info-text"></p>
-            <button style="padding: 10px 20px; background: #00d4ff; border: none; font-weight: bold;" onclick="resume()">OK</button>
-        </div>
+
+    <div id="score-container">
+        <span class="label">Átomos</span>
+        <div id="score-val">0</div>
     </div>
+
+    <div id="overlay">
+        <h2 id="otitle"></h2>
+        <p id="otext" style="padding: 20px;"></p>
+        <button onclick="resume()" style="padding: 15px 30px; font-weight: bold;">CONTINUAR</button>
+    </div>
+
     <canvas id="gameCanvas"></canvas>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
+        const scoreEl = document.getElementById('score-val');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
         let score = 0;
-        let energy = 100;
         let gameActive = true;
         let currentStage = -1;
 
         const stages = [
-            { threshold: 0, title: "BIG BANG", text: "Início de tudo. Colete luz!" },
-            { threshold: 15, title: "ESTRELAS", text: "As estrelas criam os elementos do seu corpo." },
-            { threshold: 40, title: "VIDA", text: "Você é poeira de estrelas!" }
+            { t: 0, h: "BIG BANG", p: "Tudo começou aqui!" },
+            { t: 15, h: "ESTRELAS", p: "Você é poeira de estrelas." }
         ];
 
-        const player = { x: canvas.width/2, y: canvas.height * 0.6, radius: 25 };
+        const player = { x: canvas.width/2, y: canvas.height * 0.7, r: 25 };
         const objects = [];
 
-        window.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            player.x = e.touches[0].clientX;
-        }, { passive: false });
-        window.addEventListener('mousemove', (e) => player.x = e.clientX);
-
-        function showPedagogy() {
-            const stage = stages.find((s, idx) => score >= s.threshold && idx > currentStage);
-            if (stage) {
-                currentStage = stages.indexOf(stage);
-                gameActive = false;
-                document.getElementById('info-title').innerText = stage.title;
-                document.getElementById('info-text').innerText = stage.text;
-                document.getElementById('info-overlay').style.display = 'flex';
-            }
-        }
-
         function resume() {
-            document.getElementById('info-overlay').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
             gameActive = true;
             loop();
         }
 
+        function check() {
+            const s = stages.find((st, i) => score >= st.t && i > currentStage);
+            if (s) {
+                currentStage = stages.indexOf(s);
+                gameActive = false;
+                document.getElementById('otitle').innerText = s.h;
+                document.getElementById('otext').innerText = s.p;
+                document.getElementById('overlay').style.display = 'flex';
+            }
+        }
+
+        // Movimento
+        window.addEventListener('touchmove', (e) => {
+            player.x = e.touches[0].clientX;
+        });
+        window.addEventListener('mousemove', (e) => player.x = e.clientX);
+
         function spawn() {
             if (!gameActive) return;
-            const isEnemy = Math.random() > 0.7;
-            objects.push({ x: Math.random() * canvas.width, y: -50, type: isEnemy ? 'dark' : 'atom', speed: 5 });
+            objects.push({
+                x: Math.random() * canvas.width,
+                y: -20,
+                type: Math.random() > 0.8 ? 'bad' : 'good',
+                s: 5
+            });
         }
 
         function loop() {
@@ -82,46 +97,28 @@
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // --- DESENHAR HUD (PLACAR) DIRETAMENTE NO CANVAS ---
-            ctx.fillStyle = "#ffd700";
-            ctx.font = "bold 50px Arial";
-            ctx.textAlign = "center";
-            // Desenha o número de pontos bem grande no topo
-            ctx.fillText(score, canvas.width / 2, 80);
-            
-            ctx.fillStyle = "white";
-            ctx.font = "14px Arial";
-            ctx.fillText("ÁTOMOS COLETADOS", canvas.width / 2, 110);
-
-            // Barra de Energia (Fina no topo)
-            ctx.fillStyle = "#333";
-            ctx.fillRect(canvas.width/2 - 50, 130, 100, 5);
-            ctx.fillStyle = "#00ffcc";
-            ctx.fillRect(canvas.width/2 - 50, 130, energy, 5);
-
-            // --- JOGADOR ---
+            // Jogador
             ctx.beginPath();
-            ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+            ctx.arc(player.x, player.y, player.r, 0, Math.PI*2);
             ctx.fillStyle = "white";
             ctx.fill();
 
-            // --- OBJETOS ---
             for (let i = objects.length - 1; i >= 0; i--) {
-                const o = objects[i];
-                o.y += o.speed;
+                let o = objects[i];
+                o.y += o.s;
                 ctx.beginPath();
                 ctx.arc(o.x, o.y, 15, 0, Math.PI*2);
-                ctx.fillStyle = o.type === 'dark' ? '#ff3366' : '#ffd700';
+                ctx.fillStyle = o.type === 'bad' ? 'red' : 'gold';
                 ctx.fill();
 
-                if (Math.hypot(player.x - o.x, player.y - o.y) < player.radius + 15) {
-                    if (o.type === 'atom') {
+                if (Math.hypot(player.x - o.x, player.y - o.y) < player.r + 15) {
+                    if (o.type === 'good') {
                         score++;
-                        energy = Math.min(100, energy + 2);
-                        showPedagogy();
+                        scoreEl.innerText = score;
+                        check();
                     } else {
-                        energy -= 20;
-                        if (energy <= 0) location.reload();
+                        score = Math.max(0, score - 1);
+                        scoreEl.innerText = score;
                     }
                     objects.splice(i, 1);
                 } else if (o.y > canvas.height) objects.splice(i, 1);
@@ -130,7 +127,7 @@
         }
 
         setInterval(spawn, 600);
-        showPedagogy();
+        check();
         loop();
     </script>
 </body>
