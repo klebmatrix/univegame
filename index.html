@@ -6,32 +6,41 @@
     <style>
         body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: sans-serif; }
         
-        /* BOTÃO VERMELHO PARA NÃO SUMIR */
+        /* BOTÃO COM MARGEM DE SEGURANÇA */
         #home-link {
             position: fixed; 
-            top: 5px; 
-            left: 5px; 
+            top: 40px; /* Empurrei para baixo para fugir da câmera/barra */
+            left: 20px; /* Afastei da borda lateral */
             z-index: 9999;
-            background: #ff0000; 
+            background: #ff4757; /* Vermelho mais visível */
             color: #fff; 
-            padding: 15px; 
+            padding: 12px 20px; 
             text-decoration: none; 
             font-size: 14px; 
             font-weight: bold;
-            border-radius: 5px;
-            display: block !important;
+            border-radius: 8px;
+            display: block;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
+        /* PLACAR AINDA MAIS BAIXO */
         #score {
-            position: absolute; top: 70px; width: 100%; text-align: center;
-            font-size: 80px; color: #ffd700; font-weight: bold; pointer-events: none;
+            position: absolute; 
+            top: 120px; /* Desci o placar para não bater no botão */
+            width: 100%; 
+            text-align: center;
+            font-size: 80px; 
+            color: #ffd700; 
+            font-weight: bold; 
+            pointer-events: none;
+            text-shadow: 2px 2px 10px #000;
         }
         canvas { display: block; background: #000; }
     </style>
 </head>
 <body>
 
-    <a href="https://cromosvirtual.com/" id="home-link" target="_top">SAIR / HOME</a>
+    <a href="https://cromosvirtual.com/" id="home-link" target="_top">← VOLTAR</a>
     <div id="score">0</div>
 
     <canvas id="gameCanvas"></canvas>
@@ -44,11 +53,11 @@
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            player.y = canvas.height * 0.6; // Bola no meio para não sumir
+            player.y = canvas.height * 0.65; // Ajuste fino da bola
         }
 
         let score = 0;
-        let player = { x: window.innerWidth/2, y: window.innerHeight * 0.6, r: 30 };
+        let player = { x: window.innerWidth/2, y: window.innerHeight * 0.65, r: 30 };
         let dots = [];
 
         window.addEventListener('resize', resize);
@@ -63,9 +72,9 @@
 
         function spawn() {
             dots.push({
-                x: Math.random() * canvas.width,
+                x: Math.random() * (canvas.width - 40) + 20,
                 y: -20,
-                s: 6
+                s: 5 + (score / 20)
             });
         }
 
@@ -73,7 +82,7 @@
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Bola Branca
+            // Jogador (Bola Branca)
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.r, 0, Math.PI*2);
             ctx.fillStyle = "white";
@@ -85,7 +94,7 @@
 
                 ctx.beginPath();
                 ctx.arc(d.x, d.y, 15, 0, Math.PI*2);
-                ctx.fillStyle = "gold";
+                ctx.fillStyle = "#ffd700";
                 ctx.fill();
 
                 let dist = Math.hypot(player.x - d.x, player.y - d.y);
@@ -100,7 +109,7 @@
             requestAnimationFrame(loop);
         }
 
-        setInterval(spawn, 500);
+        setInterval(spawn, 600);
         loop();
     </script>
 </body>
