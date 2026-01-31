@@ -1,24 +1,22 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# Configuração para remover menus e ganhar cada pixel da tela
-st.set_page_config(page_title="Origem", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Cosmos", layout="wide", initial_sidebar_state="collapsed")
 
-# Estilo para forçar o componente a ocupar a tela toda e tirar margens
+# CSS para esconder o cabeçalho do Streamlit e zerar margens
 st.markdown("""
     <style>
-        .block-container { padding: 0rem; }
-        iframe { width: 100% !important; border: none; }
-        .stCaption { text-align: center; padding: 5px; color: #888; }
+        #MainMenu {visibility: hidden;}
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+        .block-container {padding: 0px; margin: 0px;}
+        iframe {width: 100vw; height: 100vh; border: none;}
     </style>
 """, unsafe_allow_html=True)
-
-st.caption("Do Big Bang ao Presente: Arraste para coletar os átomos.")
 
 try:
     with open("index.html", "r", encoding="utf-8") as f:
         jogo_html = f.read()
-    # Altura dinâmica para garantir que tudo apareça no mobile
-    components.html(jogo_html, height=1000, scrolling=False)
+    components.html(jogo_html, height=1200, scrolling=False)
 except FileNotFoundError:
     st.error("Arquivo index.html não encontrado.")
