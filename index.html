@@ -3,49 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jornada Cósmica: Sistema de Energia</title>
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: none; }
+        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; touch-action: none; }
         canvas { display: block; background: radial-gradient(circle, #050515 0%, #000 100%); }
-        
+        .hud { position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); pointer-events: none; z-index: 5; }
+        .energy-bar { width: 150px; height: 10px; background: #333; border: 1px solid #fff; border-radius: 5px; margin-top: 5px; overflow: hidden; }
+        #energy-fill { width: 100%; height: 100%; background: #00ffcc; transition: width 0.3s; }
         #info-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center;
-            padding: 20px; box-sizing: border-box; display: none; z-index: 10;
+            background: rgba(0,0,0,0.9); display: none; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; padding: 20px; z-index: 10;
         }
-        #info-box {
-            max-width: 500px; border: 2px solid #00d4ff; padding: 20px;
-            border-radius: 15px; background: #0a0a1a;
-        }
-        .btn-ready {
-            margin-top: 20px; padding: 10px 30px; background: #00ffcc;
-            color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;
-        }
-        .hud { position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); pointer-events: none; }
-        .energy-bar-container {
-            width: 200px; height: 15px; background: #333; border: 1px solid #fff; border-radius: 10px; overflow: hidden; margin-top: 5px;
-        }
-        #energy-fill { width: 100%; height: 100%; background: #00ffcc; transition: width 0.3s; }
+        .btn { padding: 12px 25px; background: #00d4ff; border: none; border-radius: 8px; font-weight: bold; margin-top: 15px; }
     </style>
 </head>
 <body>
 
     <div class="hud">
-        <div style="font-size: 12px; color: #00d4ff;">ERA ATUAL: <span id="current-era">Universo Primitivo</span></div>
-        <div style="font-size: 18px; font-weight: bold;">Átomos: <span id="score-val">0</span></div>
-        <div class="energy-bar-container">
-            <div id="energy-fill"></div>
-        </div>
-        <div style="font-size: 10px;">ENERGIA CÓSMICA</div>
+        <div id="era-label" style="color: #00d4ff; font-size: 14px;">Universo Primitivo</div>
+        <div style="font-size: 18px;">Átomos: <span id="score-val">0</span></div>
+        <div class="energy-bar"><div id="energy-fill"></div></div>
     </div>
 
     <div id="info-overlay">
-        <div id="info-box">
-            <h2 id="info-title">Título</h2>
-            <p id="info-text">Texto pedagógico aqui...</p>
-            <button class="btn-ready" onclick="resumeGame()">Continuar Evolução</button>
-        </div>
+        <h2 id="info-title"></h2>
+        <p id="info-text" style="max-width: 400px; line-height: 1.5;"></p>
+        <button class="btn" onclick="resume()">Continuar Evolução</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -53,7 +36,6 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const overlay = document.getElementById('info-overlay');
         const energyFill = document.getElementById('energy-fill');
         
         canvas.width = window.innerWidth;
@@ -62,107 +44,102 @@
         let score = 0;
         let energy = 100;
         let gameActive = true;
-        let currentStageIndex = -1;
+        let currentStage = -1;
 
-        const pedagogicalStages = [
-            { threshold: 0, title: "1. O Universo Primitivo", text: "Tudo começou com energia pura. Colete partículas para formar a primeira matéria!", label: "Universo Primitivo" },
-            { threshold: 20, title: "2. Era das Trevas", text: "O Universo esfriou. Agora a gravidade começa a formar as primeiras estrelas.", label: "Era das Trevas" },
-            { threshold: 50, title: "3. Cosmic Noon", text: "O auge da produção de estrelas! A energia está em todo lugar.", label: "Cosmic Noon" }
+        const stages = [
+            { threshold: 0, title: "Universo Primitivo", text: "Tudo começou com energia pura e radiação de fundo. Colete luz!", label: "Início (13.8 bi anos)" },
+            { threshold: 15, title: "Era das Trevas", text: "O universo esfriou e ficou escuro até que as primeiras estrelas surgissem.", label: "Era das Trevas" },
+            { threshold: 35, title: "Cosmic Noon", text: "O pico da formação estelar! Aqui nasceram os átomos que formam você.", label: "Meio-dia Cósmico" }
         ];
 
-        const player = { x: canvas.width/2, y: canvas.height-100, radius: 15, targetX: canvas.width/2 };
+        const player = { x: canvas.width/2, y: canvas.height - 80, radius: 15 };
         const objects = [];
 
-        function updateEnergy(amount) {
-            energy += amount;
-            if (energy > 100) energy = 100;
-            if (energy <= 0) {
-                energy = 0;
-                gameActive = false;
-                alert("Energia esgotada! O Universo entrou em colapso. Tente novamente.");
-                location.reload();
-            }
-            energyFill.style.width = energy + "%";
-            // Muda cor da barra se estiver baixa
-            energyFill.style.background = energy < 30 ? "#ff3366" : "#00ffcc";
-        }
+        // Lógica de Movimento Híbrida (Mouse e Touch)
+        const handleMove = (e) => {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            player.x = clientX;
+            // Garante que o jogador não saia da tela
+            if (player.x < player.radius) player.x = player.radius;
+            if (player.x > canvas.width - player.radius) player.x = canvas.width - player.radius;
+        };
 
-        function checkPedagogy() {
-            const stage = pedagogicalStages.find((s, idx) => score >= s.threshold && idx > currentStageIndex);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', (e) => { e.preventDefault(); handleMove(e); }, { passive: false });
+
+        function showPedagogy() {
+            const stage = stages.find((s, idx) => score >= s.threshold && idx > currentStage);
             if (stage) {
-                currentStageIndex = pedagogicalStages.indexOf(stage);
+                currentStage = stages.indexOf(stage);
                 gameActive = false;
                 document.getElementById('info-title').innerText = stage.title;
                 document.getElementById('info-text').innerText = stage.text;
-                document.getElementById('current-era').innerText = stage.label;
-                overlay.style.display = 'flex';
+                document.getElementById('era-label').innerText = stage.label;
+                document.getElementById('info-overlay').style.display = 'flex';
             }
         }
 
-        function resumeGame() {
-            overlay.style.display = 'none';
+        function resume() {
+            document.getElementById('info-overlay').style.display = 'none';
             gameActive = true;
             loop();
         }
 
         function spawn() {
-            if(!gameActive) return;
+            if (!gameActive) return;
             const isEnemy = Math.random() > 0.7;
             objects.push({
                 x: Math.random() * canvas.width,
-                y: -50,
-                type: isEnemy ? 'enemy' : 'point',
-                speed: 4 + (score/25)
+                y: -20,
+                type: isEnemy ? 'dark' : 'atom',
+                speed: 3 + (score / 20)
             });
         }
 
         function loop() {
-            if(!gameActive) return;
+            if (!gameActive) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            player.x += (player.targetX - player.x) * 0.15;
-            
-            // Desenha jogador com rastro de luz
+            // Jogador (Luz)
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
             ctx.fillStyle = "#fff";
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = "#00d4ff";
+            ctx.shadowBlur = 15; ctx.shadowColor = "#00d4ff";
             ctx.fill();
 
-            for(let i=objects.length-1; i>=0; i--) {
+            for (let i = objects.length - 1; i >= 0; i--) {
                 const o = objects[i];
                 o.y += o.speed;
                 
                 ctx.beginPath();
                 ctx.arc(o.x, o.y, 10, 0, Math.PI*2);
-                ctx.fillStyle = o.type === 'enemy' ? '#ff3366' : '#ffd700';
-                ctx.shadowBlur = 5;
+                ctx.fillStyle = o.type === 'dark' ? '#ff3366' : '#ffd700';
                 ctx.fill();
 
                 const dist = Math.hypot(player.x - o.x, player.y - o.y);
-                if(dist < player.radius + 10) {
-                    if(o.type === 'point') {
+                if (dist < player.radius + 10) {
+                    if (o.type === 'atom') {
                         score++;
+                        energy = Math.min(100, energy + 2);
                         document.getElementById('score-val').innerText = score;
-                        updateEnergy(2); // Ganha um pouco de energia ao coletar
-                        checkPedagogy();
+                        showPedagogy();
                     } else {
-                        updateEnergy(-15); // Perde 15% de energia ao bater na matéria escura
+                        energy -= 15;
+                        if (energy <= 0) {
+                            alert("Energia esgotada! O ciclo recomeça.");
+                            location.reload();
+                        }
                     }
+                    energyFill.style.width = energy + "%";
                     objects.splice(i, 1);
                 }
-                if(o && o.y > canvas.height) objects.splice(i, 1);
+                if (o.y > canvas.height) objects.splice(i, 1);
             }
-
             requestAnimationFrame(loop);
         }
 
-        canvas.addEventListener('touchmove', (e) => player.targetX = e.touches[0].clientX);
-        canvas.addEventListener('mousemove', (e) => player.targetX = e.clientX);
-
         setInterval(spawn, 600);
-        checkPedagogy();
+        showPedagogy();
         loop();
     </script>
 </body>
