@@ -6,45 +6,39 @@
     <style>
         body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: sans-serif; }
         
-        /* BOTÃO HOME - LINK CORRIGIDO */
-        #btn-home {
+        /* BOTÃO LINK REAL - ABRE EM NOVA ABA */
+        #home-link {
             position: fixed; 
-            top: 70px; /* Bem abaixo da barra do navegador */
+            top: 80px; /* Bem longe da quina do celular */
             left: 20px; 
-            z-index: 99999; /* Camada máxima absoluta */
+            z-index: 999999;
             background: #ff4757; 
-            color: #fff; 
-            padding: 18px 30px; 
-            border: 2px solid #fff;
-            font-size: 18px; 
+            color: #fff !important; 
+            padding: 15px 25px; 
+            text-decoration: none !important;
+            font-size: 16px; 
             font-weight: bold;
-            border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            text-transform: uppercase;
+            border-radius: 10px;
+            border: 2px solid #fff;
+            display: inline-block;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
 
         #score {
-            position: absolute; top: 160px; width: 100%; text-align: center;
-            font-size: 90px; color: #ffd700; font-weight: bold; pointer-events: none;
-            text-shadow: 3px 3px 10px #000;
+            position: absolute; top: 180px; width: 100%; text-align: center;
+            font-size: 80px; color: #ffd700; font-weight: bold; pointer-events: none;
         }
         canvas { display: block; background: #000; }
     </style>
 </head>
 <body>
 
-    <button id="btn-home" onclick="sair()">← HOME</button>
+    <a href="https://cromosvirtual.com/" id="home-link" target="_blank">VOLTAR PARA HOME</a>
     
     <div id="score">0</div>
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        // Função para quebrar o frame e ir para o link correto
-        function sair() {
-            window.top.location.href = "https://cromosvirtual.com/";
-        }
-
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
@@ -67,9 +61,9 @@
             player.x = x;
         }
 
-        // Garante que o toque no botão funcione e o jogo não "roube" o clique
         window.addEventListener('touchmove', (e) => { 
-            if(e.target.id !== 'btn-home') {
+            // Só move se o toque não for no link
+            if(e.target.id !== 'home-link') {
                 e.preventDefault(); 
                 move(e);
             }
@@ -89,7 +83,6 @@
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Jogador
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.r, 0, Math.PI*2);
             ctx.fillStyle = "white";
