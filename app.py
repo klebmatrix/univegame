@@ -2,35 +2,24 @@ import streamlit as st
 import streamlit.components.v1 as components
 import os
 
-# Configuração da página
-st.set_page_config(page_title="Jornada Cósmica", layout="centered")
+# Configuração da página para ocupar bem o espaço
+st.set_page_config(page_title="Jornada Cósmica", layout="wide")
 
-# Puxa a chave das variáveis de ambiente (Configurada no Streamlit Secrets ou Render)
-# Use letras minúsculas como você solicitou: chave_mestra
-CHAVE_MESTRA = os.getenv("chave_mestra", "123456") # Valor padrão caso não encontre
+# Título e Introdução Pedagógica
+st.title("🌌 Jornada Cósmica: Da Origem ao Humano")
+st.write("Explore a linha do tempo do universo, colete átomos e aprenda sobre a nossa origem estelar.")
 
-st.title("🌌 Origem do Universo")
-
-# Verificação de PIN (Mínimo 6, Máximo 8 caracteres conforme sua regra)
-pin_input = st.text_input("Digite seu PIN de acesso para iniciar a evolução:", type="password")
-
-if pin_input == CHAVE_MESTRA:
-    st.success("Acesso concedido! Iniciando linha do tempo...")
+# Carregamento do Jogo (index.html)
+try:
+    with open("index.html", "r", encoding="utf-8") as f:
+        jogo_html = f.read()
     
-    # Lendo o arquivo do jogo
-    try:
-        with open("index.html", "r", encoding="utf-8") as f:
-            jogo_html = f.read()
-        
-        # Renderiza o jogo dentro do Streamlit
-        components.html(jogo_html, height=600, scrolling=False)
-        
-    except FileNotFoundError:
-        st.error("Arquivo index.html não encontrado no repositório!")
-else:
-    if pin_input:
-        st.error("PIN incorreto. A matéria escura bloqueou seu acesso.")
+    # Injeta o jogo na página. Ajustei a altura para 700px para caber bem no navegador.
+    components.html(jogo_html, height=700, scrolling=False)
 
-# Rodapé pedagógico
+except FileNotFoundError:
+    st.error("Erro: O arquivo 'index.html' não foi encontrado. Certifique-se de que ele está na mesma pasta do app.py no GitHub.")
+
+# Rodapé com o conceito das imagens
 st.markdown("---")
-st.caption("Atividade Pedagógica: Evolução Estelar e Origem da Vida.")
+st.info("**Cunho Pedagógico:** Este jogo representa a evolução desde o Universo Primordial até o Universo Moderno, destacando o 'Cosmic Noon' como o período crucial de formação dos elementos químicos que compõem a vida.")
