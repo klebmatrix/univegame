@@ -1,15 +1,23 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title="Cosmos", layout="wide")
+# Configuração para esconder menus e ganhar espaço
+st.set_page_config(page_title="Cosmos", layout="wide", initial_sidebar_state="collapsed")
 
-# Texto super reduzido para ganhar espaço
-st.caption("Do Big Bang ao Presente: Colete os átomos da nossa origem.")
+# Estilo para remover margens brancas do Streamlit
+st.markdown("""
+    <style>
+        .reportview-container .main .block-container { padding-top: 0rem; }
+        iframe { border-radius: 10px; }
+    </style>
+""", unsafe_allow_html=True)
+
+st.caption("Do Big Bang ao Presente: Arraste para coletar os átomos.")
 
 try:
     with open("index.html", "r", encoding="utf-8") as f:
         jogo_html = f.read()
-    # Aumentei a altura para 800 para o jogo brilhar na tela
-    components.html(jogo_html, height=800, scrolling=False)
+    # Altura maior para garantir que o fundo apareça no mobile
+    components.html(jogo_html, height=800)
 except FileNotFoundError:
     st.error("Arquivo index.html não encontrado.")
