@@ -6,12 +6,12 @@ st.set_page_config(layout="wide")
 st.markdown("""
     <style>
         .block-container {padding: 0px;}
-        iframe {border: none; width: 100%; height: 600px;}
+        iframe {border: none; width: 100vw; height: 100vh;}
     </style>
 """, unsafe_allow_html=True)
 
 try:
     with open("index.html", "r", encoding="utf-8") as f:
-        components.html(f.read(), height=650)
+        components.html(f.read(), height=800)
 except:
-    st.error("Arquivo index.html não encontrado")
+    st.error("Erro: Arquivo index.html não encontrado.")

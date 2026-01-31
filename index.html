@@ -4,21 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: sans-serif; }
+        
+        /* BOTÃO VERMELHO PARA NÃO SUMIR */
         #home-link {
-            position: absolute; top: 10px; left: 10px; z-index: 100;
-            color: #fff; background: #333; padding: 10px; text-decoration: none; font-size: 12px;
+            position: fixed; 
+            top: 5px; 
+            left: 5px; 
+            z-index: 9999;
+            background: #ff0000; 
+            color: #fff; 
+            padding: 15px; 
+            text-decoration: none; 
+            font-size: 14px; 
+            font-weight: bold;
+            border-radius: 5px;
+            display: block !important;
         }
+
         #score {
-            position: absolute; top: 50px; width: 100%; text-align: center;
-            font-size: 70px; color: #ffd700; font-weight: bold; pointer-events: none;
+            position: absolute; top: 70px; width: 100%; text-align: center;
+            font-size: 80px; color: #ffd700; font-weight: bold; pointer-events: none;
         }
-        canvas { display: block; }
+        canvas { display: block; background: #000; }
     </style>
 </head>
 <body>
 
-    <a href="https://cromosvirtual.com/" id="home-link" target="_top">VOLTAR HOME</a>
+    <a href="https://cromosvirtual.com/" id="home-link" target="_top">SAIR / HOME</a>
     <div id="score">0</div>
 
     <canvas id="gameCanvas"></canvas>
@@ -28,13 +41,18 @@
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            player.y = canvas.height * 0.6; // Bola no meio para não sumir
+        }
 
         let score = 0;
-        // POSIÇÃO DA BOLA: 50% da altura (bem no meio para não sumir)
-        let player = { x: canvas.width/2, y: canvas.height * 0.5, r: 25 };
+        let player = { x: window.innerWidth/2, y: window.innerHeight * 0.6, r: 30 };
         let dots = [];
+
+        window.addEventListener('resize', resize);
+        resize();
 
         function move(e) {
             let x = e.touches ? e.touches[0].clientX : e.clientX;
@@ -47,7 +65,7 @@
             dots.push({
                 x: Math.random() * canvas.width,
                 y: -20,
-                s: 5 + (score / 10)
+                s: 6
             });
         }
 
@@ -55,7 +73,7 @@
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Desenha o jogador (Bola Branca)
+            // Bola Branca
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.r, 0, Math.PI*2);
             ctx.fillStyle = "white";
@@ -70,7 +88,6 @@
                 ctx.fillStyle = "gold";
                 ctx.fill();
 
-                // Colisão
                 let dist = Math.hypot(player.x - d.x, player.y - d.y);
                 if (dist < player.r + 15) {
                     score++;
@@ -83,7 +100,7 @@
             requestAnimationFrame(loop);
         }
 
-        setInterval(spawn, 600);
+        setInterval(spawn, 500);
         loop();
     </script>
 </body>
