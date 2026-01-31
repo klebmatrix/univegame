@@ -6,27 +6,28 @@
     <style>
         body { margin: 0; background: #000; overflow: hidden; touch-action: none; font-family: sans-serif; }
         
-        /* BOTÃO REFORÇADO E DESLOCADO */
+        /* BOTÃO HOME - LINK CORRIGIDO */
         #btn-home {
             position: fixed; 
-            top: 60px; /* Descido para não emperrar na barra do navegador */
+            top: 70px; /* Bem abaixo da barra do navegador */
             left: 20px; 
-            z-index: 10000; /* Camada máxima */
+            z-index: 99999; /* Camada máxima absoluta */
             background: #ff4757; 
             color: #fff; 
-            padding: 15px 25px; 
+            padding: 18px 30px; 
             border: 2px solid #fff;
-            font-size: 16px; 
+            font-size: 18px; 
             font-weight: bold;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255,0,0,0.4);
-            -webkit-appearance: none; /* Garante que apareça no iPhone */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            text-transform: uppercase;
         }
 
         #score {
-            position: absolute; top: 140px; width: 100%; text-align: center;
-            font-size: 80px; color: #ffd700; font-weight: bold; pointer-events: none;
+            position: absolute; top: 160px; width: 100%; text-align: center;
+            font-size: 90px; color: #ffd700; font-weight: bold; pointer-events: none;
+            text-shadow: 3px 3px 10px #000;
         }
         canvas { display: block; background: #000; }
     </style>
@@ -39,7 +40,7 @@
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        // Função que força a saída do Streamlit para o seu site
+        // Função para quebrar o frame e ir para o link correto
         function sair() {
             window.top.location.href = "https://cromosvirtual.com/";
         }
@@ -65,20 +66,22 @@
             let x = e.touches ? e.touches[0].clientX : e.clientX;
             player.x = x;
         }
-        window.addEventListener('mousemove', move);
+
+        // Garante que o toque no botão funcione e o jogo não "roube" o clique
         window.addEventListener('touchmove', (e) => { 
-            // Só move se o toque não for em cima do botão
             if(e.target.id !== 'btn-home') {
                 e.preventDefault(); 
                 move(e);
             }
         }, {passive: false});
 
+        window.addEventListener('mousemove', move);
+
         function spawn() {
             dots.push({
-                x: Math.random() * (canvas.width - 40) + 20,
-                y: -20,
-                s: 5 + (score / 15)
+                x: Math.random() * (canvas.width - 50) + 25,
+                y: -50,
+                s: 5 + (score / 20)
             });
         }
 
@@ -86,6 +89,7 @@
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Jogador
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.r, 0, Math.PI*2);
             ctx.fillStyle = "white";
@@ -95,15 +99,15 @@
                 let d = dots[i];
                 d.y += d.s;
                 ctx.beginPath();
-                ctx.arc(d.x, d.y, 18, 0, Math.PI*2);
+                ctx.arc(d.x, d.y, 20, 0, Math.PI*2);
                 ctx.fillStyle = "#ffd700";
                 ctx.fill();
 
-                if (Math.hypot(player.x - d.x, player.y - d.y) < player.r + 18) {
+                if (Math.hypot(player.x - d.x, player.y - d.y) < player.r + 20) {
                     score++;
                     scoreEl.innerText = score;
                     dots.splice(i, 1);
-                } else if (d.y > canvas.height) dots.splice(i, 1);
+                } else if (d.y > canvas.height + 50) dots.splice(i, 1);
             }
             requestAnimationFrame(loop);
         }
